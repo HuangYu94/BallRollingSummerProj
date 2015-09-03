@@ -122,7 +122,7 @@ ff=cell(1,numBall);
 syms theta
 for n=1:numBall
     temp=RotateX(theta/rads(n))*X(:,:,n);
-    ff{n}=acos(temp*[0;0;1]);
+    ff{n}=acos(temp*[0;0;1]).^2;
 end
 while abs(newx-oldx)>precision
     oldx=newx;
@@ -151,11 +151,11 @@ while abs(c-d)>0.0000000001
     for n=1:numball
         temp1=RotateX((newVar-f_deriv*c)/rads(n))*X(:,:,n);
         temp=temp1*[0;0;1];
-        obj_temp=acos(temp(3));
+        obj_temp=acos(temp(3)).^2;
         ffc=ffc+obj_temp; %get the objective function value for later comparison
         temp1=RotateX((newVar-f_deriv*d)/rads(n))*X(:,:,n);
         temp=temp1*[0;0;1];
-        obj_temp=acos(temp(3));
+        obj_temp=acos(temp(3)).^2;
         ffd=ffd+obj_temp;
     end
     if ffc<=ffd
@@ -180,7 +180,7 @@ ff=cell(1,numBall);
 syms theta
 for n=1:numBall
     temp=RotateY(theta/rads(n))*X(:,:,n);
-    ff{n}=acos(temp*[0;0;1]);
+    ff{n}=acos(temp*[0;0;1]).^2;
 end
 while abs(newy-oldy)>precision
     oldy=newy;
@@ -209,11 +209,11 @@ while abs(c-d)>0.0000000000001
     for n=1:numball
         temp1=RotateY((newVar-f_deriv*c)/rads(n))*X(:,:,n);
         temp=temp1*[0;0;1];
-        obj_temp=acos(temp(3));
+        obj_temp=acos(temp(3)).^2;
         ffc=ffc+obj_temp; %get the objective function value for later comparison
         temp1=RotateY((newVar-f_deriv*d)/rads(n))*X(:,:,n);
         temp=temp1*[0;0;1];
-        obj_temp=acos(temp(3));
+        obj_temp=acos(temp(3)).^2;
         ffd=ffd+obj_temp;
     end
     if ffc<=ffd
