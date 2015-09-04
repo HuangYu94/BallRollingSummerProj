@@ -1,4 +1,4 @@
-function AdjErrGradDec2(ang_X,ang_Y)
+function AdjErrGradDec3(ang_X,ang_Y)
 %Michael Williams 2015, Email: michael.williams.hy@gmail.com
 %
 %The gradient descent method uses a flexible step length
