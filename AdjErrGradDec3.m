@@ -114,14 +114,16 @@ while err_new>precision_control
         xlabel('steps (x,y, or z rotations)');
         ylabel('standard deviation from the Z-Axis of the WOLRD coordinates (degs)');  %  sqrt(1/numBall*sum( psi.^2))  
         path1=path(:,1:k);
-        figure(2)
-        plot(path1(1,:),path1(2,:), path1(1,1),path1(2,1),'go');
-        plot(ZrotRec(1,1:Zround),ZrotRec(2,1:Zround),'ro');
-        title('movement of the panel for the control process');
-        legend ('path','start','end','rotate around z','location','Northeastoutside')
-        xlabel('motion projected on the X axis')
-        ylabel('motion projected on the Y axis')
-        hold on
+        if Zround>=2
+            figure(2)
+            plot(path1(1,:),path1(2,:), path1(1,1),path1(2,1),'go',path1(1,end),path1(2,end),'ro',ZrotRec(1,1:Zround),ZrotRec(2,1:Zround),'bo');
+            legend ('path','start','end','rotate around z','Location','Southeastoutside');
+            title('movement of the panel for the control process');
+            xlabel('motion projected on the X axis')
+            ylabel('motion projected on the Y axis')
+        else
+            break
+        end
     end
     Zround=Zround+1;
     Zturn=Z_align(X,rads);  %find out the optimal angle to align the balls`
