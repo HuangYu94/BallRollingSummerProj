@@ -65,7 +65,8 @@ color_arr=['y','m','c','r','g','b','w','k'];
 figure(1);
 plot(stp, 180/pi*sum(error_rec,2),'k' );
 hold on
-legendinfo{1}=['error sum'];
+legendinfo=cell(1,numBall);
+legendinfo{1}='error sum';
 for i=1:numBall
     plot(stp,180/pi*error_rec(:,i),color_arr(i));
     legendinfo{i+1}=['rad:',num2str(rads(i))];

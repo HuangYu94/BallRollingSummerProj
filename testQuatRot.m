@@ -19,7 +19,7 @@ for n=1:numBall  %make the initial rotation
     psi(n)=acos(zaxis(4));
 end
 err_init=sum(psi);
-steps=20000;
+steps=2000;
 errorX=zeros(1,steps);
 errorY=zeros(1,steps);
 trial_ang=zeros(1,steps);
