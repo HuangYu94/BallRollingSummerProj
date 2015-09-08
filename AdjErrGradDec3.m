@@ -39,7 +39,8 @@ error_rec=zeros(1,numStep);
 ZrotRec=zeros(3,numStep);%record the position for z rotation and the rotation angle
 RMSE=zeros(1,numStep);
 RMSEinDEG=zeros(1,numStep);
-
+global precision
+precision=1e-6;
 X = repmat(eye(3),[1,1,numBall]);
 psi = zeros(numBall,1);
 for n=1:numBall %set the initial angle of balls
@@ -164,9 +165,7 @@ toc
         % INPUTS:
         % X: Rotation matrices for each ball
         % rads: array recording the radius for each ball
-        %numBall: number of balls
-        
-        precision=1e-6;
+        % numBall: number of balls
         ff=cell(1,numBall);
         newx=MakeUnimodalX(X,rads); %find a unimodal region for the gradient descent method
         oldx=newx-1;  % make the loop start
@@ -228,7 +227,7 @@ toc
         GR=(sqrt(5)-1)/2; %global variable for Golden Section Search (https://en.wikipedia.org/wiki/Golden_section_search)
         d=GR*(b-a)+a;
         c=b-GR*(b-a);
-        while abs(c-d)>0.0000000001
+        while abs(c-d)>precision
             ffc=0;
             ffd=0;
             for ng=1:numball
@@ -256,7 +255,6 @@ toc
 
     function Yturn=GDFindLengthY(X,rads,numBall)
         %find a proper rotation angle for Y axis
-        precision=0.000001; %TODO: make this a global variable -- this is too high
         ff=cell(1,numBall);
         newy=MakeUnimodalY(X,rads);
         oldy=newy-1;
@@ -317,7 +315,7 @@ toc
             b=2;
             d=GR*(b-a)+a;
             c=b-GR*(b-a);
-            while abs(c-d)>0.0000000001
+            while abs(c-d)>precision
                 ffc=0;
                 ffd=0;
                 for ng=1:numball
@@ -364,7 +362,7 @@ toc
             %I align them to the +X direction
             obj_f{Balln}=atan2(real(temp1(2)),real(temp(1))).^2; 
         end
-        precision=0.00001; %implement the gradient descent method
+        %implement the gradient descent method
         newz=MakeUnimodalZ(X,rads);
         oldz=newz-1;   %start the loop
         while abs(newz-oldz)>precision
