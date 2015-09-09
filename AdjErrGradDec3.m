@@ -17,7 +17,9 @@ function AdjErrGradDec3(ang_X,ang_Y)
 %      which has the fewest number of z-turns?  (or the shortest
 %         sum(abs(z-angle_rotations))
 %      which has the shortest overall path length?
-
+% This file align the balls` z axises into the positive direction of the X-
+% axis, so after each rotation about Z axis, moving toward the negative
+% direction of the X axis will always be the best choice.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 format compact
 syms theta % this is needed for optimization
@@ -51,7 +53,7 @@ k=0; % number of steps
 Zround=0; %index to record the Z angle;
 % Zturn=pi*600/nr; %nr denote how many steps you need to rotate
 % to turn the bigest ball around
-precision_control=0.01;  %stop the process when this error is reached
+precision_control=0.02;  %stop the process when this error is reached
 err_new=10;%make the loop start
 while err_new>precision_control
     for n=1:numBall  %calculate the initial error
@@ -190,8 +192,8 @@ toc
         %Yu Huang 2015, e-mail:Michael.Williams.hy@gmail.com
         MAXrad=max(rads);
         step_length=MAXrad*pi/10;
-        trial0=-pi*MAXrad;
-        Mstep=21; %make the maximum trial value at pi*Mrad
+        trial0=-2*pi*MAXrad;
+        Mstep=41; %make the maximum trial value at pi*Mrad
         tempPsi=zeros(1,numBall); %store the psi.^2 for each ball
         errorX=zeros(1,Mstep);
         for i=1:Mstep+1
@@ -279,8 +281,8 @@ toc
         %Yu Huang 2015, e-mail:Michael.Williams.hy@gmail.com
         MAXrad=max(rads);
         step_length=MAXrad*pi/10;
-        trial0=-pi*MAXrad;
-        Mstep=21; %make the maximum trial value at pi*Mrad
+        trial0=-2*pi*MAXrad;
+        Mstep=41; %make the maximum trial value at pi*Mrad
         tempPsi=zeros(1,numBall); %store the psi.^2 for each ball
         errorY=zeros(1,Mstep);
         for i=1:Mstep+1
