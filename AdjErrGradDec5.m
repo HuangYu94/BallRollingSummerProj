@@ -54,7 +54,7 @@ k=0; % number of steps
 Zround=0; %index to record the Z angle;
 % Zturn=pi*600/nr; %nr denote how many steps you need to rotate
 % to turn the bigest ball around
-precision_control=0.01;  %stop the process when this error is reached
+precision_control=0.02;  %stop the process when this error is reached
 err_new=10;%make the loop start
 while err_new>precision_control
     for n=1:numBall  %calculate the initial error
