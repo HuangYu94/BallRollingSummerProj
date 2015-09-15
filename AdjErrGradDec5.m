@@ -331,167 +331,159 @@ toc
             end
             gamma=(a+b)/2;
         end
-end
-function Zturn=Z_align(X,rads)
-% this function was written for finding the optimal angle for rotation
-% around Z axsis to make the balls align together to the positive direction
-% of X axsis.
-%I still extend the previous
-%Michael Williams 2015, e-mail:michael.williams.hy@gamil.com
-%         sin_sum=0;
-%         cos_sum=0;
-%         for Balln=1:numBall  %calculate the average angle
-%             temp=X(:,:,Balln)*[0;0;1];
-%             sin_sum=sin_sum+temp(2);
-%             cos_sum=cos_sum+temp(1);
-%         end
-%         sin_av=sin_sum./numBall;
-%         cos_av=cos_sum./numBall;
-obj_f2=0;
-obj_f1=0;
-numBall=numel(rads);
-syms theta1;
-for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
-    temp=RotateZ(theta1/rads(Balln))*X(:,:,Balln);
-    temp1=temp*[0;0;1];
-    %I align them to the so-called "avrage direction" direction
-    obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
-    obj_f1=obj_f1+atan2(temp1(2),temp(1));
-end
-obj_f1=obj_f1/numBall;
-obj_f2=obj_f2/numBall;
-obj_function=obj_f1-obj_f2.^2;
-f_deriv=diff(obj_function,theta1);
-%implement the gradient descent method
-newz=MakeUnimodalZ(X,rads);
-oldz=newz-1;   %start the loop
-precision=0.00001;
-while abs(newz-oldz)>precision
-    oldz=newz;
-    f_deriv1=subs(f_deriv,theta1,newz);
-    gamma=FindGammaZ(f_deriv1,X,numBall,newz,rads);
-    newz=newz-f_deriv1*gamma;
-    display(newz);
-end
-Zturn=newz;
-end
-
-function gamma=FindGammaZ(f_deriv,X,numBall,newz,rads)
-%still I use the golden section search to find the proper gamma
-%         sin_sum=0;
-%         cos_sum=0;
-%         for Balln=1:numBall  %calculate the average angle
-%             temp=X(:,:,Balln)*[0;0;1];
-%             sin_sum=sin_sum+temp(2);
-%             cos_sum=cos_sum+temp(1);
-%         end
-%         sin_av=sin_sum./numBall;
-%         cos_av=cos_sum./numBall;
-GR=(sqrt(5)-1)/2; %global varible for Golden Section Search
-a=0;
-b=2;
-d=GR*(b-a)+a;
-c=b-GR*(b-a);
-obj_f2=0;
-obj_f1=0;
-syms theta1;
-for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
-    temp=RotateZ(theta1/rads(Balln))*X(:,:,Balln);
-    temp1=temp*[0;0;1];
-    %I align them to the so-called "avrage direction" direction
-    obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
-    obj_f1=obj_f1+atan2(temp1(2),temp(1));
-end
-obj_f1=obj_f1/numBall;
-obj_f2=obj_f2/numBall;
-obj_function=obj_f1-obj_f2.^2;
-while abs(c-d)>0.000000001
-    ffc=subs(obj_function,theta1,newz-f_deriv*c);
-    ffd=subs(obj_function,theta1,newz-f_deriv*d);
-    %             for Balln=1:numBall
-    %                 temp1=RotateZ((newz-f_deriv*c)/rads(Balln))*X(:,:,Balln);
-    %                 temp=temp1*[0;0;1];
-    %                 obj_temp=atan2(real(temp(2))-sin_av,real(temp(1))-cos_av).^2;
-    %                 ffc=ffc+obj_temp; %get the objective function value for later comparison
-    %                 temp1=RotateZ((newz-f_deriv*d)/rads(Balln))*X(:,:,Balln);
-    %                 temp=temp1*[0;0;1];
-    %                 obj_temp=atan2(real(temp(2))-sin_av,real(temp(1))-cos_av).^2;
-    %                 ffd=ffd+obj_temp;
-    %             end
-    if ffc<=ffd
-        b=d;
-        d=c;
-        c=b-GR*(b-a);
-    else
-        a=c;
-        c=d;
-        d=a+GR*(b-a);
+    function Zturn=Z_align(X,rads)
+        % this function was written for finding the optimal angle for rotation
+        % around Z axsis to make the balls align together to the positive direction
+        % of X axsis.
+        %I still extend the previous
+        %Michael Williams 2015, e-mail:michael.williams.hy@gamil.com
+        %         sin_sum=0;
+        %         cos_sum=0;
+        %         for Balln=1:numBall  %calculate the average angle
+        %             temp=X(:,:,Balln)*[0;0;1];
+        %             sin_sum=sin_sum+temp(2);
+        %             cos_sum=cos_sum+temp(1);
+        %         end
+        %         sin_av=sin_sum./numBall;
+        %         cos_av=cos_sum./numBall;
+        obj_f2=0;
+        obj_f1=0;
+        for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
+            temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
+            temp1=temp*[0;0;1];
+            %I align them to the so-called "avrage direction" direction
+            obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
+            obj_f1=obj_f1+atan2(temp1(2),temp(1));
+        end
+        obj_f1=obj_f1/numBall;
+        obj_f2=obj_f2/numBall;
+        obj_function=obj_f1-obj_f2.^2;
+        %implement the gradient descent method
+        newz=MakeUnimodalZ(X,rads);
+        oldz=newz-1;   %start the loop
+        while abs(newz-oldz)>precision
+            oldz=newz;
+            f_deriv1=vpa(subs(obj_function,theta,newz));
+            gamma=FindGammaZ(f_deriv1,X,numBall,newz,rads);
+            newz=newz-f_deriv1*gamma;
+        end
+        Zturn=newz;
     end
-end
-gamma=(a+b)/2;
-end
-function Zturn=MakeUnimodalZ(X,rads)
-%for this function I still use the blindly trial method to find the
-%alignment angle.
-%Still we can use the gradient descent method to search for a
-%more precise solution to the rotation angle around Z axis
-%Michael Williams 2015, e-mail:michael.williams.hy@gamil.com
-MAXrad=max(rads);
-StepLength=MAXrad*pi/10; %length for trial
-trial0=-4*pi*MAXrad;  %initialize
-%             Xtemp=repmat(eye(3),[1,1,numBall]);
-%             theta2=zeros(1,numBall);
-trial_span=81;
-trial_result=zeros(1,trial_span);
-%             sin_sum=0;
-%             cos_sum=0;
-%             for nz=1:numBall  %calculate the average angle
-%                 temp=X(:,:,nz)*[0;0;1];
-%                 sin_sum=sin_sum+temp(2);
-%                 cos_sum=cos_sum+temp(1);
-%             end
-%             sin_av=sin_sum./numBall;
-%             cos_av=cos_sum./numBall;
-obj_f2=0;
-obj_f1=0;
-numBall=numel(rads);
-syms theta1;
-for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
-    temp=RotateZ(theta1/rads(Balln))*X(:,:,Balln);
-    temp1=temp*[0;0;1];
-    %I align them to the so-called "avrage direction" direction
-    obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
-    obj_f1=obj_f1+atan2(temp1(2),temp(1));
-end
-obj_f1=obj_f1/numBall;
-obj_f2=obj_f2/numBall;
-obj_function=obj_f1-obj_f2.^2;
-for i=1:trial_span
-    trial=trial0+StepLength*i;
-    trial_result(i)=subs(obj_function,theta1,trial);
-    %                 for nz=1:numBall
-    %                     Xtemp(:,:,nz)=RotateZ(trial/rads(nz))*X(:,:,nz);
-    %                     temp=Xtemp(:,:,nz)*[0;0;1];
-    %                     theta2(nz)=atan2(real(temp(2))-sin_av,real(temp(1))-cos_av).^2;
-    %                 end
-    %                 trial_result(i)=sum(abs(theta2));
-end
-[~,I]=min(trial_result);
-Zturn=StepLength*I+trial0;
-end
-function RxTh = RotateX(theta)
-RxTh = [1,  0,  0;
-    0, cos(theta), -sin(theta);
-    0, sin(theta),  cos(theta)];
-end
-function RyTh = RotateY(theta)
-RyTh = [ cos(theta), 0, sin(theta);
-    0,  1,  0;
-    -sin(theta), 0, cos(theta)];
-end
-function RzTh = RotateZ(theta)
-RzTh = [cos(theta),  -sin(theta),0;
-    sin(theta),   cos(theta),0;
-    0,  0,  1];
-end
+
+    function gamma=FindGammaZ(f_deriv,X,numBall,newz,rads)
+        %still I use the golden section search to find the proper gamma
+        %         sin_sum=0;
+        %         cos_sum=0;
+        %         for Balln=1:numBall  %calculate the average angle
+        %             temp=X(:,:,Balln)*[0;0;1];
+        %             sin_sum=sin_sum+temp(2);
+        %             cos_sum=cos_sum+temp(1);
+        %         end
+        %         sin_av=sin_sum./numBall;
+        %         cos_av=cos_sum./numBall;
+        GR=(sqrt(5)-1)/2; %global varible for Golden Section Search
+        a=0;
+        b=2;
+        d=GR*(b-a)+a;
+        c=b-GR*(b-a);
+        obj_f2=0;
+        obj_f1=0;
+        for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
+            temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
+            temp1=temp*[0;0;1];
+            %I align them to the so-called "avrage direction" direction
+            obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
+            obj_f1=obj_f1+atan2(temp1(2),temp(1));
+        end
+        obj_f1=obj_f1/numBall;
+        obj_f2=obj_f2/numBall;
+        obj_function=obj_f1-obj_f2.^2;
+        while abs(c-d)>0.000000000001
+            ffc=subs(obj_function,theta,newz-f_deriv*c);
+            ffd=subs(obj_function,theta,newz-f_deriv*d);
+            %             for Balln=1:numBall
+            %                 temp1=RotateZ((newz-f_deriv*c)/rads(Balln))*X(:,:,Balln);
+            %                 temp=temp1*[0;0;1];
+            %                 obj_temp=atan2(real(temp(2))-sin_av,real(temp(1))-cos_av).^2;
+            %                 ffc=ffc+obj_temp; %get the objective function value for later comparison
+            %                 temp1=RotateZ((newz-f_deriv*d)/rads(Balln))*X(:,:,Balln);
+            %                 temp=temp1*[0;0;1];
+            %                 obj_temp=atan2(real(temp(2))-sin_av,real(temp(1))-cos_av).^2;
+            %                 ffd=ffd+obj_temp;
+            %             end
+            if ffc<=ffd
+                b=d;
+                d=c;
+                c=b-GR*(b-a);
+            else
+                a=c;
+                c=d;
+                d=a+GR*(b-a);
+            end
+        end
+        gamma=(a+b)/2;
+    end
+    function Zturn=MakeUnimodalZ(X,rads)
+        %for this function I still use the blindly trial method to find the
+        %alignment angle.
+        %Still we can use the gradient descent method to search for a
+        %more precise solution to the rotation angle around Z axis
+        %Michael Williams 2015, e-mail:michael.williams.hy@gamil.com
+        MAXrad=max(rads);
+        StepLength=MAXrad*pi/10; %length for trial
+        trial0=-4*pi*MAXrad;  %initialize
+        %             Xtemp=repmat(eye(3),[1,1,numBall]);
+        %             theta2=zeros(1,numBall);
+        trial_span=81;
+        trial_result=zeros(1,trial_span);
+        %             sin_sum=0;
+        %             cos_sum=0;
+        %             for nz=1:numBall  %calculate the average angle
+        %                 temp=X(:,:,nz)*[0;0;1];
+        %                 sin_sum=sin_sum+temp(2);
+        %                 cos_sum=cos_sum+temp(1);
+        %             end
+        %             sin_av=sin_sum./numBall;
+        %             cos_av=cos_sum./numBall;
+        obj_f2=0;
+        obj_f1=0;
+        for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
+            temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
+            temp1=temp*[0;0;1];
+            %I align them to the so-called "avrage direction" direction
+            obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
+            obj_f1=obj_f1+atan2(temp1(2),temp(1));
+        end
+        obj_f1=obj_f1/numBall;
+        obj_f2=obj_f2/numBall;
+        obj_function=obj_f1-obj_f2.^2;
+        for i=1:trial_span
+            trial=trial0+StepLength*i;
+            trial_result(i)=subs(obj_function,theta,trial);
+            %                 for nz=1:numBall
+            %                     Xtemp(:,:,nz)=RotateZ(trial/rads(nz))*X(:,:,nz);
+            %                     temp=Xtemp(:,:,nz)*[0;0;1];
+            %                     theta2(nz)=atan2(real(temp(2))-sin_av,real(temp(1))-cos_av).^2;
+            %                 end
+            %                 trial_result(i)=sum(abs(theta2));
+        end
+        [~,I]=min(trial_result);
+        Zturn=StepLength*I+trial0;
+    end
+    function RxTh = RotateX(theta)
+        RxTh = [1,  0,  0;
+            0, cos(theta), -sin(theta);
+            0, sin(theta),  cos(theta)];
+    end
+    function RyTh = RotateY(theta)
+        RyTh = [ cos(theta), 0, sin(theta);
+            0,  1,  0;
+            -sin(theta), 0, cos(theta)];
+    end
+    function RzTh = RotateZ(theta)
+        RzTh = [cos(theta),  -sin(theta),0;
+            sin(theta),   cos(theta),0;
+            0,  0,  1];
+    end
 %TODO:  write RotateQuaternionX(theta)
+end
