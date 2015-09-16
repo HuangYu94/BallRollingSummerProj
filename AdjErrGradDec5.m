@@ -54,7 +54,7 @@ k=0; % number of steps
 Zround=0; %index to record the Z angle;
 % Zturn=pi*600/nr; %nr denote how many steps you need to rotate
 % to turn the bigest ball around
-precision_control=0.02;  %stop the process when this error is reached
+precision_control=0.01;  %stop the process when this error is reached
 err_new=10;%make the loop start
 while err_new>precision_control
     for n=1:numBall  %calculate the initial error
@@ -139,7 +139,7 @@ title('Noiseless Ensemble Control of 4 Spheres Orientation');
 xlabel('steps');
 ylabel('overall error(degs)');
 path1=path(:,1:k);
-save('GDmyData.mat','error_rec','path','path1','ZrotRec');
+save('GDmyData1.mat','error_rec','path','path1','ZrotRec','X');
 figure(2)
 plot(path1(1,:),path1(2,:), path1(1,1),path1(2,1),'go',path1(1,end),path1(2,end),'rx' );
 hold on
@@ -397,7 +397,7 @@ toc
         end
         obj_f1=obj_f1/numBall;
         obj_f2=obj_f2/numBall;
-        obj_function=obj_f1-obj_f2.^2;
+        obj_function=sqrt(obj_f1-obj_f2.^2);
         while abs(c-d)>0.000000000001
             ffc=subs(obj_function,theta,newz-f_deriv*c);
             ffd=subs(obj_function,theta,newz-f_deriv*d);
@@ -456,7 +456,7 @@ toc
         end
         obj_f1=obj_f1/numBall;
         obj_f2=obj_f2/numBall;
-        obj_function=obj_f1-obj_f2.^2;
+        obj_function=sqrt(obj_f1-obj_f2.^2);
         for i=1:trial_span
             trial=trial0+StepLength*i;
             trial_result(i)=subs(obj_function,theta,trial);
