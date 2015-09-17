@@ -346,26 +346,33 @@ toc
         %         end
         %         sin_av=sin_sum./numBall;
         %         cos_av=cos_sum./numBall;
-        obj_f2=0;
-        obj_f1=0;
+        obj_function=0;
+        temp1sum=0;
+        temp2sum=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
             temp1=temp*[0;0;1];
-            %I align them to the so-called "avrage direction" direction
-            obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
-            obj_f1=obj_f1+atan2(temp1(2),temp(1));
+            %I align them to the so-called "average direction" direction
+            temp2sum=temp1(2)+temp2sum;
+            temp1sum=temp1(1)+temp1sum;
         end
-        obj_f1=obj_f1/numBall;
-        obj_f2=obj_f2/numBall;
-        obj_function=obj_f1-obj_f2.^2;
+        AverageDir=atan2(temp2sum,temp1sum);
+        for Balln=1:numBall
+            temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
+            temp1=temp*[0;0;1];
+            theta_ori=(atan2(temp1(2),temp1(1))-AverageDir).^2;
+            obj_function=obj_function+theta_ori;
+        end
         %implement the gradient descent method
         newz=MakeUnimodalZ(X,rads);
         oldz=newz-1;   %start the loop
-        while abs(newz-oldz)>precision
+        c=0;
+        while abs(newz-oldz)>precision && c<20
             oldz=newz;
             f_deriv1=vpa(subs(obj_function,theta,newz));
             gamma=FindGammaZ(f_deriv1,X,numBall,newz,rads);
             newz=newz-f_deriv1*gamma;
+            c=c+1;
         end
         Zturn=newz;
     end
@@ -386,18 +393,23 @@ toc
         b=2;
         d=GR*(b-a)+a;
         c=b-GR*(b-a);
-        obj_f2=0;
-        obj_f1=0;
+        temp1sum=0;
+        temp2sum=0;
+        obj_function=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
             temp1=temp*[0;0;1];
-            %I align them to the so-called "avrage direction" direction
-            obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
-            obj_f1=obj_f1+atan2(temp1(2),temp(1));
+            %I align them to the so-called "average direction" direction
+            temp2sum=temp1(2)+temp2sum;
+            temp1sum=temp1(1)+temp1sum;
         end
-        obj_f1=obj_f1/numBall;
-        obj_f2=obj_f2/numBall;
-        obj_function=sqrt(obj_f1-obj_f2.^2);
+        AverageDir=atan2(temp2sum,temp1sum);
+        for Balln=1:numBall
+            temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
+            temp1=temp*[0;0;1];
+            theta_ori=(atan2(temp1(2),temp1(1))-AverageDir).^2;
+            obj_function=obj_function+theta_ori;
+        end
         while abs(c-d)>0.000000000001
             ffc=subs(obj_function,theta,newz-f_deriv*c);
             ffd=subs(obj_function,theta,newz-f_deriv*d);
@@ -445,18 +457,23 @@ toc
         %             end
         %             sin_av=sin_sum./numBall;
         %             cos_av=cos_sum./numBall;
-        obj_f2=0;
-        obj_f1=0;
+        temp1sum=0;
+        temp2sum=0;
+        obj_function=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
             temp1=temp*[0;0;1];
-            %I align them to the so-called "avrage direction" direction
-            obj_f2=obj_f2+atan2(temp1(2),temp(1)).^2;
-            obj_f1=obj_f1+atan2(temp1(2),temp(1));
+            %I align them to the so-called "average direction" direction
+            temp2sum=temp1(2)+temp2sum;
+            temp1sum=temp1(1)+temp1sum;
         end
-        obj_f1=obj_f1/numBall;
-        obj_f2=obj_f2/numBall;
-        obj_function=sqrt(obj_f1-obj_f2.^2);
+        AverageDir=atan2(temp2sum,temp1sum);
+        for Balln=1:numBall
+            temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
+            temp1=temp*[0;0;1];
+            theta_ori=(atan2(temp1(2),temp1(1))-AverageDir).^2;
+            obj_function=obj_function+theta_ori;
+        end
         for i=1:trial_span
             trial=trial0+StepLength*i;
             trial_result(i)=subs(obj_function,theta,trial);
