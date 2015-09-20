@@ -11,16 +11,16 @@ format compact
 clc
 rads = [10,13,17,19]; %balls` radii for experiment
 numBall=numel(rads);
-configX=repmat(eye(4),[1,1,numBall]); %configuration for each ball.
+configX=repmat(eye(3),[1,1,numBall]); %configuration for each ball.
 radmin=min(rads);
 if nargin<2
-    thetaL = 2*pi; R = radmin;
+    thetaL = 4*pi; R = radmin/5;
 end
 rc=zeros(1,numBall); %make the rc for lollipop
 for n=1:numBall  
     rc(n)=rads(n).^2/sqrt(R.^2+rads(n).^2);
 end
-trial_times=1000;
+trial_times=40000;
 stp=zeros(1,trial_times+1);
 error_rec=zeros(numBall,trial_times+1);%record the error repectively
 error_total=zeros(1,trial_times+1);
@@ -33,8 +33,8 @@ for i=0:trial_times
 %         RotVec=quatrotate(qq,[R 0 rads(n)]);
         temp=ArbQuatRotate([R,0,rads(n)],-trial_ang*R/rads(n),configX(:,:,n));
         configX(:,:,n)=ArbQuatRotate([0,0,1],trial_ang,temp);%make the lollipop rotation
-        zaxis=[0,0,0,1]*configX(:,:,n);
-        error_rec(n,i+1)=acos(zaxis(4));
+        zaxis=configX(:,:,n)*[0;0;1];
+        error_rec(n,i+1)=acos(zaxis(3));
     end
     error_total(i+1)=sum(abs(error_rec(:,i+1)));
 end
@@ -66,8 +66,6 @@ function Y=ArbQuatRotate(RotAxis,RotAng,X)
 %Yu Huang 2015, Email: michael.williams.hy@gmail.com
 axis_module=sqrt(RotAxis(1)+RotAxis(2)+RotAxis(3)); %normalize
 q=[cos(RotAng./2) RotAxis(1).*sin(RotAng./2)/axis_module RotAxis(2).*sin(RotAng./2)/axis_module RotAxis(3).*sin(RotAng./2)/axis_module];
-q_inv=quatinv(q);
 %making the quaternions for rotation
-temp=quatmultiply(q,X);
-Y=quatmultiply(temp,q_inv);
+Y=quatrotate(q,X);
 end

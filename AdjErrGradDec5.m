@@ -43,12 +43,12 @@ RMSE=zeros(1,numStep);
 RMSEinDEG=zeros(1,numStep);
 global precision;
 precision=0.00001;
-X = repmat(eye(3),[1,1,numBall]);
+X = repmat([0;0;1],[1,1,numBall]);
 psi = zeros(numBall,1);
 for n=1:numBall %set the initial angle of balls
-    X(:,:,n)=RotateX(ang_X/rads(n))*RotateY(ang_Y/rads(n));
-    zaxis=X(:,:,n)*[0;0;1];
-    psi(n) = acos(zaxis(3));
+    X(:,:,n)=RotateX(ang_X/rads(n))*RotateY(ang_Y/rads(n))*X(:,:,n);
+%     zaxis=X(:,:,n)*[0;0;1];
+    psi(n) = acos(X(3,:,n));
 end
 k=0; % number of steps
 Zround=0; %index to record the Z angle;
@@ -57,16 +57,17 @@ Zround=0; %index to record the Z angle;
 precision_control=0.01;  %stop the process when this error is reached
 err_new=10;%make the loop start
 while err_new>precision_control
+    psi=zeros(1,numBall);
     for n=1:numBall  %calculate the initial error
-        Z_orient=X(:,:,n)*[0;0;1];
-        psi=acos(Z_orient(3));
+%         Z_orient=X(:,:,n)*[0;0;1];
+        psi(n)=acos(X(3,:,n));
     end
     err_delta=sum(psi.^2);
     while err_delta>0.0005
         k=k+1;
         for n=1:numBall %calculate the current error
-            zaxis=X(:,:,n)*[0;0;1];
-            psi(n) = acos(zaxis(3));
+%             zaxis=X(:,:,n)*[0;0;1];
+            psi(n) = acos(X(3,:,n));
         end
         err_old=sqrt(sum(psi.^2)/numBall);
         Xturn=GDFindLengthX(X,rads,numBall);%find best length for X rotation
@@ -74,8 +75,8 @@ while err_new>precision_control
         path(1,k+1)=path(1,k);
         for n=1:numBall  %apply the rotation.   %GOAL: use quaternions
             X(:,:,n)=RotateX(Xturn/rads(n))*X(:,:,n);
-            zaxis=X(:,:,n)*[0;0;1];
-            psi(n)=acos(zaxis(3));
+%             zaxis=X(:,:,n)*[0;0;1];
+            psi(n)=acos(X(3,:,n));
         end
         err_new=sqrt(sum(psi.^2)/numBall);
         error_rec(k)=err_new;
@@ -87,8 +88,8 @@ while err_new>precision_control
         Yturn=GDFindLengthY(X,rads,numBall);%find a proper length for Y rotation
         for n=1:numBall
             X(:,:,n)=RotateY(Yturn/rads(n))*X(:,:,n);
-            zaxis=X(:,:,n)*[0;0;1];
-            psi(n)=acos(zaxis(3));
+%             zaxis=X(:,:,n)*[0;0;1];
+            psi(n)=acos(X(3,:,n));
         end
         path(1,k+1)=Yturn+path(1,k);
         path(2,k+1)=path(2,k);
@@ -126,8 +127,6 @@ while err_new>precision_control
     ZrotRec(3,Zround)=Zturn;
     for n=1:numBall
         X(:,:,n)=RotateZ(Zturn/rads(n))*X(:,:,n);
-        Z_orient=X(:,:,n)*[0;0;1];
-        psi=acos(Z_orient(3));
     end
 end
 %we need to get the error_rec rid of zero, in order to make a plot
@@ -162,14 +161,14 @@ toc
         oldx=newx-1;  % make the loop start
         for nx=1:numBall
             temp=RotateX(theta/rads(nx))*X(:,:,nx); %effect of symbolic rotation -- theta is a free parameter
-            ff{nx}=acos(temp*[0;0;1]).^2;  %psi as a function of theta.
+            ff{nx}=acos(temp(3)).^2;  %psi as a function of theta.
         end
         while abs(newx-oldx)>precision
             oldx=newx;
             f_deriv=0;
             for nx=1:numBall
                 temp=vpa(subs(ff{nx},theta,newx));
-                f_deriv=f_deriv+temp(3);
+                f_deriv=f_deriv+temp;
             end
             gamma=FindGammaX(f_deriv,X,numBall,newx,rads);
             newx=newx-f_deriv*gamma;  %follow negative gradient
@@ -200,8 +199,8 @@ toc
             trial=trial0+(i-1)*step_length;
             for nx=1:numBall
                 temp=RotateX(trial/rads(nx))*X(:,:,nx); %effect of symbolic rotation
-                temp1=acos(temp*[0;0;1]);
-                tempPsi(nx)=temp1(3);
+%                 temp1=acos(temp(3));
+                tempPsi(nx)=acos(temp(3));
             end
             errorX(i)=sum(tempPsi.^2);
         end
@@ -222,12 +221,12 @@ toc
             ffc=0;
             ffd=0;
             for ng=1:numball
-                temp1=RotateX((newVar-f_deriv*c)/rads(ng))*X(:,:,ng);
-                temp=temp1*[0;0;1];
+                temp=RotateX((newVar-f_deriv*c)/rads(ng))*X(:,:,ng);
+%                 temp=temp1*[0;0;1];
                 obj_temp=acos(temp(3)).^2;
                 ffc=ffc+obj_temp; %get the objective function value for later comparison
-                temp1=RotateX((newVar-f_deriv*d)/rads(ng))*X(:,:,ng);
-                temp=temp1*[0;0;1];
+                temp=RotateX((newVar-f_deriv*d)/rads(ng))*X(:,:,ng);
+%                 temp=temp*[0;0;1];
                 obj_temp=acos(temp(3)).^2;
                 ffd=ffd+obj_temp;
             end
@@ -251,14 +250,14 @@ toc
         oldy=newy-1;
         for ny=1:numBall
             temp=RotateY(theta/rads(ny))*X(:,:,ny);
-            ff{ny}=acos(temp*[0;0;1]).^2;
+            ff{ny}=acos(temp(3)).^2;
         end
         while abs(newy-oldy)>precision
             oldy=newy;
             f_deriv=0;
             for ny=1:numBall
                 temp=vpa(subs(ff{ny},theta,newy));
-                f_deriv=f_deriv+temp(3);
+                f_deriv=f_deriv+temp;
             end
             gamma=FindGammaY(f_deriv,X,numBall,newy,rads);
             newy=newy-f_deriv*gamma;
@@ -289,8 +288,8 @@ toc
             trial=trial0+(i-1)*step_length;
             for nx=1:numBall
                 temp=RotateY(trial/rads(nx))*X(:,:,nx); %effect of symbolic rotation
-                temp1=acos(temp*[0;0;1]);
-                tempPsi(nx)=temp1(3);
+%                 temp1=acos(temp*[0;0;1]);
+                tempPsi(nx)=acos(temp(3));
             end
             errorY(i)=sum(tempPsi.^2);
         end
@@ -310,12 +309,10 @@ toc
                 ffc=0;
                 ffd=0;
                 for ng=1:numball
-                    temp1=RotateY((newVar-f_deriv*c)/rads(ng))*X(:,:,ng);
-                    temp=temp1*[0;0;1];
+                    temp=RotateY((newVar-f_deriv*c)/rads(ng))*X(:,:,ng);
                     obj_temp=acos(temp(3)).^2;
                     ffc=ffc+obj_temp; %get the objective function value for later comparison
-                    temp1=RotateY((newVar-f_deriv*d)/rads(ng))*X(:,:,ng);
-                    temp=temp1*[0;0;1];
+                    temp=RotateY((newVar-f_deriv*d)/rads(ng))*X(:,:,ng);
                     obj_temp=acos(temp(3)).^2;
                     ffd=ffd+obj_temp;
                 end
@@ -351,16 +348,15 @@ toc
         temp2sum=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
-            temp1=temp*[0;0;1];
             %I align them to the so-called "average direction" direction
-            temp2sum=temp1(2)+temp2sum;
-            temp1sum=temp1(1)+temp1sum;
+            temp2sum=temp(2)+temp2sum;
+            temp1sum=temp(1)+temp1sum;
         end
         AverageDir=atan2(temp2sum,temp1sum);
         for Balln=1:numBall
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
-            temp1=temp*[0;0;1];
-            theta_ori=(atan2(temp1(2),temp1(1))-AverageDir).^2;
+%             temp1=temp*[0;0;1];
+            theta_ori=(atan2(temp(2),temp(1))-AverageDir).^2;
             obj_function=obj_function+theta_ori;
         end
         %implement the gradient descent method
@@ -398,16 +394,16 @@ toc
         obj_function=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
-            temp1=temp*[0;0;1];
+%             temp1=temp*[0;0;1];
             %I align them to the so-called "average direction" direction
-            temp2sum=temp1(2)+temp2sum;
-            temp1sum=temp1(1)+temp1sum;
+            temp2sum=temp(2)+temp2sum;
+            temp1sum=temp(1)+temp1sum;
         end
         AverageDir=atan2(temp2sum,temp1sum);
         for Balln=1:numBall
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
-            temp1=temp*[0;0;1];
-            theta_ori=(atan2(temp1(2),temp1(1))-AverageDir).^2;
+%             temp1=temp*[0;0;1];
+            theta_ori=(atan2(temp(2),temp(1))-AverageDir).^2;
             obj_function=obj_function+theta_ori;
         end
         while abs(c-d)>0.000000000001
@@ -462,16 +458,16 @@ toc
         obj_function=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
-            temp1=temp*[0;0;1];
+%             temp1=temp*[0;0;1];
             %I align them to the so-called "average direction" direction
-            temp2sum=temp1(2)+temp2sum;
-            temp1sum=temp1(1)+temp1sum;
+            temp2sum=temp(2)+temp2sum;
+            temp1sum=temp(1)+temp1sum;
         end
         AverageDir=atan2(temp2sum,temp1sum);
         for Balln=1:numBall
             temp=RotateZ(theta/rads(Balln))*X(:,:,Balln);
-            temp1=temp*[0;0;1];
-            theta_ori=(atan2(temp1(2),temp1(1))-AverageDir).^2;
+%             temp1=temp*[0;0;1];
+            theta_ori=(atan2(temp(2),temp(1))-AverageDir).^2;
             obj_function=obj_function+theta_ori;
         end
         for i=1:trial_span
