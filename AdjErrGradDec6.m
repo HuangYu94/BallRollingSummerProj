@@ -121,27 +121,27 @@ while err_new>precision_control
         end
     end
     Zround=Zround+1;
-    for n=1:numBall %calculate the current error
-        %             zaxis=X(:,:,n)*[0;0;1];
-        psi(n) = acos(X(3,:,n));
-        SumTheta1=sum(X(1,:,n));
-        SumTheta2=sum(X(2,:,n));
-    end
-    OrientTheta=atan2(SumTheta2,SumTheta1);
-    PsiAv=sum(psi)/numBall;  %calculate the average psi error
-    rctemp=RadAv*tan(PsiAv/2);
-    if rctemp>20
-        rc=20;
-    else
-        rc=rctemp;
-    end
-    RotPoint=[-rc*cos(OrientTheta),-rc*sin(OrientTheta),0];
-    alpha=FindAlpha(RotPoint,X,rads);
+%     for n=1:numBall %calculate the current error
+%         %             zaxis=X(:,:,n)*[0;0;1];
+%         psi(n) = acos(X(3,:,n));
+%         SumTheta1=sum(X(1,:,n));
+%         SumTheta2=sum(X(2,:,n));
+%     end
+%     OrientTheta=atan2(SumTheta2,SumTheta1);
+%     PsiAv=sum(psi)/numBall;  %calculate the average psi error
+    Rc=RadAv*sqrt(5)/2;
+%     if rctemp>20
+%         rc=20;
+%     else
+%         rc=rctemp;
+%     end
+    RotPoint=[0,-Rc,0];
+    alpha=FindAlpha(RotPoint,X,rads,Rc);
     BallConfig=repmat([0,0;0,0;0,0],[1,1,numBall]);
     for n=1:numBall
         rcRoll=RadAv*rads(n)/sqrt(RadAv.^2+rads(n).^2);
         BallConfig(:,2,n)=X(:,:,n)*rads(n);
-        BallConfig(:,:,n)=ArbAxisRotate(RotPoint,[0,0,rads(n)],alpha*RadAv/rcRoll,BallConfig(:,:,n));
+        BallConfig(:,:,n)=ArbAxisRotate(RotPoint,[0,0,rads(n)],-alpha*Rc/rcRoll,BallConfig(:,:,n));
         BallConfig(:,:,n)=RotateZ(alpha)*BallConfig(:,:,n);
         X(:,:,n)=(BallConfig(:,2,n)-BallConfig(:,1,n))/rads(n);
     end
@@ -351,7 +351,7 @@ toc
             gamma=(a+b)/2;
         end
     
-    function alpha=FindAlpha(RotPoint,X,rads)
+    function alpha=FindAlpha(RotPoint,X,rads,Rc)
         %this function will determine for what angle should the spheres
         %rotate
         %Yu Huang 2015, E-mail: Michael.Williams.hy@gmail.com
@@ -364,12 +364,12 @@ toc
             for numLoop=1:numBall
                 configX(:,2,numLoop)=X(:,:,numLoop)*rads(numLoop);
                 rcBall=RadAv*rads(numLoop)/sqrt(RadAv.^2+rads(numLoop).^2);
-                configX(:,:,numLoop)=ArbAxisRotate(RotPoint,[0,0,rads(numLoop)],tryAlpha*rc/rcBall,configX(:,:,numLoop));
+                configX(:,:,numLoop)=ArbAxisRotate(RotPoint,[0,0,rads(numLoop)],-tryAlpha*Rc/rcBall,configX(:,:,numLoop));
                 configX(:,:,numLoop)=RotateZ(tryAlpha)*configX(:,:,numLoop);
                 Zaxis=(configX(:,2,numLoop)-configX(:,1,numLoop))/rads(numLoop);
                 tempPsi(numLoop)=acos(Zaxis(3));
             end
-            trial_result(numStp)=sum(tempPsi);
+            trial_result(numStp)=sum(tempPsi.^2);
         end
         [~,IN]=min(trial_result);
         alpha=IN*2*pi/TryTime;
