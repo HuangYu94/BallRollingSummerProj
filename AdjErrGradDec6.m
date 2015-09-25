@@ -141,7 +141,7 @@ while err_new>precision_control
     for n=1:numBall
         rcRoll=RadAv*rads(n)/sqrt(RadAv.^2+rads(n).^2);
         BallConfig(:,2,n)=X(:,:,n)*rads(n);
-        BallConfig(:,:,n)=ArbAxisRotate(RotPoint,[0,0,RadAv],alpha*RadAv/rcRoll,BallConfig(:,:,n));
+        BallConfig(:,:,n)=ArbAxisRotate(RotPoint,[0,0,rads(n)],alpha*RadAv/rcRoll,BallConfig(:,:,n));
         BallConfig(:,:,n)=RotateZ(alpha)*BallConfig(:,:,n);
         X(:,:,n)=(BallConfig(:,2,n)-BallConfig(:,1,n))/rads(n);
     end
