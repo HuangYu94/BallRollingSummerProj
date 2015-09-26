@@ -64,7 +64,7 @@ while err_new>precision_control
         psi(n)=acos(X(3,:,n));
     end
     err_delta=sum(psi.^2);
-    while err_delta>0.0005
+    while err_delta>0.00001
         k=k+1;
         for n=1:numBall %calculate the current error
 %             zaxis=X(:,:,n)*[0;0;1];
@@ -121,11 +121,13 @@ while err_new>precision_control
         end
     end
     Zround=Zround+1;
+    SumTheta1=0;
+    SumTheta2=0;
     for n=1:numBall %calculate the current error
         %             zaxis=X(:,:,n)*[0;0;1];
         psi(n) = acos(X(3,:,n));
-        SumTheta1=sum(X(1,:,n));
-        SumTheta2=sum(X(2,:,n));
+        SumTheta1=SumTheta1+X(1,:,n);
+        SumTheta2=SumTheta2+X(2,:,n);
     end
     OrientTheta=atan2(SumTheta2,SumTheta1);
     PsiAv=sum(psi)/numBall;  %calculate the average psi error
@@ -382,24 +384,29 @@ toc
         % of X axsis.
         %I still extend the previous
         %Michael Williams 2015, e-mail:michael.williams.hy@gamil.com
-        %         sin_sum=0;
-        %         cos_sum=0;
         %         for Balln=1:numBall  %calculate the average angle
         %             temp=X(:,:,Balln)*[0;0;1];
         %             sin_sum=sin_sum+temp(2);
         %             cos_sum=cos_sum+temp(1);
         %         end
-        %         sin_av=sin_sum./numBall;
-        %         cos_av=cos_sum./numBall;
+        sin_sum=0;
+        cos_sum=0;        
         tempX=repmat([0,0;0,0;0,1],[1,1,numBall]);
         obj_function=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             tempX(:,2,Balln)=X(:,:,Balln)*rads(Balln);
             r_locus=rads(Balln)*rc/sqrt(rads(Balln).^2+rc.^2);
             tempX(:,:,Balln)=ArbAxisRotate(RotPoint,[0,0,rads(Balln)],-theta*rc/r_locus,tempX(:,:,Balln));
-            temp=RotateZ(theta)*tempX(:,:,Balln);
-            zaxis=(temp(:,2)-temp(:,1))/rads(Balln);
-            obj_function=obj_function+acos(zaxis(3)).^2;
+            tempX(:,:,Balln)=RotateZ(theta)*tempX(:,:,Balln);
+            zaxis=(tempX(:,:,Balln)-tempX(:,:,Balln))/rads(Balln);
+            sin_sum=sin_sum+zaxis(2);
+            cos_sum=cos_sum+zaxis(1);
+        end
+        Theta_Av=atan2(sin_sum,cos_sum);
+        for Balln=1:numBall
+            zaxis=(tempX(:,:,Balln)-tempX(:,:,Balln))/rads(Balln);
+            theta_ori=(atan2(zaxis(2),zaxis(1))-Theta_Av).^2;
+            obj_function=obj_function+theta_ori;
         end
         %implement the gradient descent method
         newz=MakeUnimodalZ(RotPoint,X,rads,rc);
@@ -408,14 +415,14 @@ toc
         while abs(newz-oldz)>precision && c<20
             oldz=newz;
             f_deriv1=vpa(subs(obj_function,theta,newz));
-            gamma=FindGammaZ(f_deriv1,X,numBall,newz,rads);
+            gamma=FindGammaZ(f_deriv1,X,numBall,newz,rads,rc);
             newz=newz-f_deriv1*gamma;
             c=c+1;
         end
         Zturn=newz;
     end
 
-    function gamma=FindGammaZ(f_deriv,X,numBall,newz,rads)
+    function gamma=FindGammaZ(f_deriv,X,numBall,newz,rads,rc)
         %still I use the golden section search to find the proper gamma
         %         sin_sum=0;
         %         cos_sum=0;
@@ -431,15 +438,24 @@ toc
         b=2;
         d=GR*(b-a)+a;
         c=b-GR*(b-a);
+        sin_sum=0;
+        cos_sum=0;        
         tempX=repmat([0,0;0,0;0,1],[1,1,numBall]);
         obj_function=0;
         for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
             tempX(:,2,Balln)=X(:,:,Balln)*rads(Balln);
             r_locus=rads(Balln)*rc/sqrt(rads(Balln).^2+rc.^2);
             tempX(:,:,Balln)=ArbAxisRotate(RotPoint,[0,0,rads(Balln)],-theta*rc/r_locus,tempX(:,:,Balln));
-            temp=RotateZ(theta)*tempX(:,:,Balln);
-            zaxis=(temp(:,2)-temp(:,1))/rads(Balln);
-            obj_function=obj_function+acos(zaxis(3)).^2;
+            tempX(:,:,Balln)=RotateZ(theta)*tempX(:,:,Balln);
+            zaxis=(tempX(:,:,Balln)-tempX(:,:,Balln))/rads(Balln);
+            sin_sum=sin_sum+zaxis(2);
+            cos_sum=cos_sum+zaxis(1);
+        end
+        Theta_Av=atan2(sin_sum,cos_sum);
+        for Balln=1:numBall
+            zaxis=(tempX(:,:,Balln)-tempX(:,:,Balln))/rads(Balln);
+            theta_ori=(atan2(zaxis(2),zaxis(1))-Theta_Av).^2;
+            obj_function=obj_function+theta_ori;
         end
         while abs(c-d)>0.000000000001
             ffc=subs(obj_function,theta,newz-f_deriv*c);
@@ -471,21 +487,30 @@ toc
         %this function will determine for what angle should the spheres
         %rotate
         %Yu Huang 2015, E-mail: Michael.Williams.hy@gmail.com
-        configX=repmat([0,0;0,0,;0,0],[1,1,numBall]);
-        TryTime=1000;
+        TryTime=10000;
         trial_result=zeros(1,TryTime);
-        tempPsi=zeros(1,numBall);
+        sin_sum=0;
+        cos_sum=0;        
+        tempX=repmat([0,0;0,0;0,1],[1,1,numBall]);
+        obj_function=0;
+        for Balln=1:numBall   %calculate the objctive funtion for every ball and store them in obj_f
+            tempX(:,2,Balln)=X(:,:,Balln)*rads(Balln);
+            r_locus=rads(Balln)*rc/sqrt(rads(Balln).^2+rc.^2);
+            tempX(:,:,Balln)=ArbAxisRotate(RotPoint,[0,0,rads(Balln)],-theta*rc/r_locus,tempX(:,:,Balln));
+            tempX(:,:,Balln)=RotateZ(theta)*tempX(:,:,Balln);
+            zaxis=(tempX(:,:,Balln)-tempX(:,:,Balln))/rads(Balln);
+            sin_sum=sin_sum+zaxis(2);
+            cos_sum=cos_sum+zaxis(1);
+        end
+        Theta_Av=atan2(sin_sum,cos_sum);
+        for Balln=1:numBall
+            zaxis=(tempX(:,:,Balln)-tempX(:,:,Balln))/rads(Balln);
+            theta_ori=(atan2(zaxis(2),zaxis(1))-Theta_Av).^2;
+            obj_function=obj_function+theta_ori;
+        end
         for numStp=1:TryTime
-            tryAlpha=numStp*2*pi/TryTime;
-            for numLoop=1:numBall
-                configX(:,2,numLoop)=X(:,:,numLoop)*rads(numLoop);
-                rcBall=rc*rads(numLoop)/sqrt(rc.^2+rads(numLoop).^2);
-                configX(:,:,numLoop)=ArbAxisRotate(RotPoint,[0,0,rads(numLoop)],-tryAlpha*rc/rcBall,configX(:,:,numLoop));
-                configX(:,:,numLoop)=RotateZ(tryAlpha)*configX(:,:,numLoop);
-                Zaxis=(configX(:,2,numLoop)-configX(:,1,numLoop))/rads(numLoop);
-                tempPsi(numLoop)=acos(Zaxis(3));
-            end
-            trial_result(numStp)=sum(tempPsi.^2);
+            tryAlpha=numStp*20*pi/TryTime;
+            trial_result(numStp)=subs(obj_function,theta,tryAlpha);
         end
         [~,IN]=min(trial_result);
         alpha=IN*2*pi/TryTime;

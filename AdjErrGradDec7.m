@@ -64,7 +64,7 @@ while err_new>precision_control
         psi(n)=acos(X(3,:,n));
     end
     err_delta=sum(psi.^2);
-    while err_delta>0.0005
+    while err_delta>0.00001
         k=k+1;
         for n=1:numBall %calculate the current error
 %             zaxis=X(:,:,n)*[0;0;1];
@@ -121,11 +121,13 @@ while err_new>precision_control
         end
     end
     Zround=Zround+1;
+    SumTheta1=0;
+    SumTheta2=0;
     for n=1:numBall %calculate the current error
         %             zaxis=X(:,:,n)*[0;0;1];
         psi(n) = acos(X(3,:,n));
-        SumTheta1=sum(X(1,:,n));
-        SumTheta2=sum(X(2,:,n));
+        SumTheta1=SumTheta1+X(1,:,n);
+        SumTheta2=SumTheta2+X(2,:,n);
     end
     OrientTheta=atan2(SumTheta2,SumTheta1);
     PsiAv=sum(psi)/numBall;  %calculate the average psi error
@@ -137,7 +139,7 @@ while err_new>precision_control
     end
     RotPoint=[-rc*cos(OrientTheta),-rc*sin(OrientTheta),0];
 %     alpha=FindAlpha(RotPoint,X,rads,rc);
-    alpha=2*pi;
+    alpha=pi*40;
     BallConfig=repmat([0,0;0,0;0,0],[1,1,numBall]);
     for n=1:numBall
         rcRoll=RadAv*rads(n)/sqrt(RadAv.^2+rads(n).^2);
