@@ -16,7 +16,7 @@ function OneBallLolli(ang_x,ang_y)
 %Yu Huang, 2015, E-mail: Michael.Williams.hy@gmail.com
 format compact
 if nargin<2
-    ang_x = 0.5*pi;ang_y = 0.3*pi;
+    ang_x = 0.7*pi;ang_y = 0.9*pi;
 end
 rad=1;
 precision=0.01;

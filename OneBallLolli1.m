@@ -20,8 +20,6 @@ if nargin<2
 end
 rad=1;
 precision=0.01;
-R=sqrt(5)/2;
-rc=R*rad/sqrt(R.^2+rad.^2);
 configBall=[0,0;0,0;0,rad]; %configuration of the ball`s z axis(2 point).
 error_rec=zeros(1,100);
 % arc_rec=zeros(1,1000);
@@ -35,13 +33,14 @@ while Zerror>precision
     zaxis=(configBall(:,2)-configBall(:,1))/rad;
     psi=acos(zaxis(3));
     Rc=rad*tan(psi/2);
+    rc=Rc*rad/sqrt(Rc.^2+rad.^2);
     stp=stp+1;
     step1(stp)=stp;
     StepArc=FindArc(configBall,Rc,rc,rad,zaxis);
 %     StepArc=pi*rc/R;
     tra_arc(stp)=StepArc;
     %make the lollipop rotation:
-    configX=ArbAxisRotate([-Rc*zaxis(1),-Rc*zaxis(2),0],[0,0,rad],-StepArc*R/rc,configBall);
+    configX=ArbAxisRotate([-Rc*zaxis(1),-Rc*zaxis(2),0],[0,0,rad],-StepArc*Rc/rc,configBall);
     configX=ArbAxisRotate([0,0,0],[0,0,rad],StepArc,configX);
     %calculate the zaxis of the ball after rotation
     zaxis=configX(:,2)-configX(:,1);
