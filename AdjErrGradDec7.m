@@ -139,7 +139,11 @@ while err_new>precision_control
     end
     RotPoint=[-rc*cos(OrientTheta),-rc*sin(OrientTheta),0];
 %     alpha=FindAlpha(RotPoint,X,rads,rc);
-    alpha=pi*40;
+    alpha=pi*40;   % we randomly set it to a big value to test our theory.
+    %==============NOTICE===================%
+    %The total time for runing this is "Elapsed time is 77967.015949
+    %seconds."
+    %==============NOTICE===================%
     BallConfig=repmat([0,0;0,0;0,0],[1,1,numBall]);
     for n=1:numBall
         rcRoll=RadAv*rads(n)/sqrt(RadAv.^2+rads(n).^2);
