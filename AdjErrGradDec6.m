@@ -8,9 +8,6 @@ function AdjErrGradDec6(ang_X,ang_Y)
 % profile the code-- what is slow?
 % error should monotonically decrease why doesn't it?  -- we will switch to
 % plot the RMSE
-% why do the balls never roll in the positive x or y direction?
-%    you don't have a unimodal function, so golden section may give the
-%    wrong results
 %
 %
 %  How to compare methods:
@@ -35,15 +32,18 @@ rads = [10,11,13,15];
 numBall=numel(rads);
 RadAv=sum(rads)/numBall;
 stp=zeros(1,numStep);
-path=zeros(2,numStep); %record the trajectory
+path=zeros(2,numStep); %record the trajectory of X-Y rolling
 %path(1,:)for recording X
 %path(2,:)for recording Y
 error_rec=zeros(1,numStep);
 ZrotRec=zeros(3,numStep);%record the position for z rotation and the rotation angle
+error_sep=zeros(numBall,numStep);
 RMSE=zeros(1,numStep);
 RMSEinDEG=zeros(1,numStep);
 global precision;
 precision=0.00001;
+global color_arr;
+color_arr=['y','m','c','r','g','b','w','k'];
 X = repmat([0;0;1],[1,1,numBall]);
 psi = zeros(numBall,1);
 for n=1:numBall %set the initial angle of balls
@@ -57,7 +57,7 @@ Zround=0; %index to record the Z angle;
 % to turn the bigest ball around
 precision_control=0.01;  %stop the process when this error is reached
 err_new=10;%make the loop start
-while err_new>precision_control
+while err_new>precision_control && k<=1000
     psi=zeros(1,numBall);
     for n=1:numBall  %calculate the initial error
 %         Z_orient=X(:,:,n)*[0;0;1];
@@ -69,6 +69,7 @@ while err_new>precision_control
         for n=1:numBall %calculate the current error
 %             zaxis=X(:,:,n)*[0;0;1];
             psi(n) = acos(X(3,:,n));
+            error_sep(n,k)=psi(n);
         end
         err_old=sqrt(sum(psi.^2)/numBall);
         Xturn=GDFindLengthX(X,rads,numBall);%find best length for X rotation
@@ -108,6 +109,15 @@ while err_new>precision_control
         title('Noiseless Ensemble Control of 4 Spheres Orientation');
         xlabel('steps (x,y, or z rotations)');
         ylabel('standard deviation from the Z-Axis of the WOLRD coordinates (degs)');  %  sqrt(1/numBall*sum( psi.^2))  
+        hold on
+        legendinfo=cell(1,numBall);
+        legendinfo{1}='error sum';
+        for ii=1:numBall
+            plot(stp,180/pi*error_sep(ii,:),color_arr(ii));
+            legendinfo{ii+1}=['rad:',num2str(rads(ii))];
+        end
+        legend(legendinfo);
+        legend('boxoff');
         path1=path(:,1:k);
         if Zround>=2
             figure(2)
@@ -138,7 +148,7 @@ while err_new>precision_control
         rc=rctemp;
     end
     RotPoint=[-rc*cos(OrientTheta),-rc*sin(OrientTheta),0];
-    alpha=FindAlpha(RotPoint,X,rads,rc);
+    alpha=FindAlpha(RotPoint,X,rads,rc,PsiAv);
     BallConfig=repmat([0,0;0,0;0,0],[1,1,numBall]);
     for n=1:numBall
         rcRoll=RadAv*rads(n)/sqrt(RadAv.^2+rads(n).^2);
@@ -151,7 +161,6 @@ while err_new>precision_control
     ZrotRec(1,Zround)=path(1,k);
     ZrotRec(2,Zround)=path(2,k);
     ZrotRec(3,Zround)=alpha;
-
 end
 %we need to get the error_rec rid of zero, in order to make a plot
 % we do the following steps:
@@ -161,6 +170,15 @@ plot(stp(1:k),RMSEinDEG(1:k));
 title('Noiseless Ensemble Control of 4 Spheres Orientation');
 xlabel('steps');
 ylabel('overall error(degs)');
+hold on
+legendinfo=cell(1,numBall);
+legendinfo{1}='error sum';
+for ii=1:numBall
+    plot(stp,180/pi*error_sep(ii,:),color_arr(ii));
+    legendinfo{ii+1}=['rad:',num2str(rads(ii))];
+end
+legend(legendinfo);
+legend('boxoff');
 path1=path(:,1:k);
 save('GDmyData1.mat','error_rec','path','path1','ZrotRec','X');
 figure(2)
@@ -169,6 +187,7 @@ hold on
 plot(ZrotRec(1,1:Zround),ZrotRec(2,1:Zround),'ro');
 title('movement of the panel for the control process');
 legend ('path','start','end','rotate around z','location','Northeastoutside')
+legend('boxoff')
 xlabel('motion projected on the X axis')
 ylabel('motion projected on the Y axis')
 toc
@@ -353,39 +372,50 @@ toc
             gamma=(a+b)/2;
         end
     
-    function alpha=FindAlpha(RotPoint,X,rads,rc)
-        %this function will determine for what angle should the spheres
+    function alpha=FindAlpha(RotPoint,X,rads,rc,psi_ang)
+        %This function will determine for what angle should the spheres
         %rotate, the metric for determining whether a turn is good or not
         %is that good turning angle always make the Z axis of the balls
-        %align together.
+        %align together. Additionally, I observed that when the average psi
+        %error decreased to a small value, the metric we use here can`t
+        %make a wise choice about alpha, so I want this function to
+        %generate a really big value for the circular motion, because when
+        %the error is small, the lollipop rotation and the rotation about
+        %the Z axis caused by the translation will somewhat neutralize to
+        %each other.
         %Yu Huang 2015, E-mail: Michael.Williams.hy@gmail.com
-        configX=repmat([0,0;0,0,;0,0],[1,1,numBall]);
-        TryTime=10000;
-        trial_result=zeros(1,TryTime);
-        %those two values are for storing the information for calculating
-        %the Theta:
-        temptheta1=zeros(1,numBall);
-        temptheta2=zeros(1,numBall);
-        for numStp=1:TryTime
-            tryAlpha=10*pi+numStp*40*pi/TryTime;
-            for numLoop=1:numBall
-                configX(:,2,numLoop)=X(:,:,numLoop)*rads(numLoop);
-                rcBall=rc*rads(numLoop)/sqrt(rc.^2+rads(numLoop).^2);
-                configX(:,:,numLoop)=ArbAxisRotate(RotPoint,[0,0,rads(numLoop)],-tryAlpha*rc/rcBall,configX(:,:,numLoop));
-                configX(:,:,numLoop)=RotateZ(tryAlpha)*configX(:,:,numLoop);
-                Zaxis=(configX(:,2,numLoop)-configX(:,1,numLoop))/rads(numLoop);
-                temptheta1(numLoop)=Zaxis(1);
-                temptheta2(numLoop)=Zaxis(2);
+        error_in_deg=180*psi_ang/pi;
+        if error_in_deg<=5
+            alpha=60*pi;
+        else
+            configX=repmat([0,0;0,0,;0,0],[1,1,numBall]);
+            TryTime=10000;
+            trial_result=zeros(1,TryTime);
+            %those two values are for storing the information for calculating
+            %the Theta:
+            temptheta1=zeros(1,numBall);
+            temptheta2=zeros(1,numBall);
+            for numStp=1:TryTime
+                tryAlpha=10*pi+numStp*40*pi/TryTime;
+                for numLoop=1:numBall
+                    configX(:,2,numLoop)=X(:,:,numLoop)*rads(numLoop);
+                    rcBall=rc*rads(numLoop)/sqrt(rc.^2+rads(numLoop).^2);
+                    configX(:,:,numLoop)=ArbAxisRotate(RotPoint,[0,0,rads(numLoop)],-tryAlpha*rc/rcBall,configX(:,:,numLoop));
+                    configX(:,:,numLoop)=RotateZ(tryAlpha)*configX(:,:,numLoop);
+                    Zaxis=(configX(:,2,numLoop)-configX(:,1,numLoop))/rads(numLoop);
+                    temptheta1(numLoop)=Zaxis(1);
+                    temptheta2(numLoop)=Zaxis(2);
+                end
+                theta_av=atan2(sum(temptheta2),sum(temptheta1));
+                alpha_metric=0;
+                for numB=1:numBall
+                    alpha_metric=alpha_metric+(atan2(temptheta2(numB),temptheta1(numB))-theta_av).^2;
+                end
+                trial_result(numStp)=alpha_metric;
             end
-            theta_av=atan2(sum(temptheta2),sum(temptheta1));
-            alpha_metric=0;
-            for numB=1:numBall
-                alpha_metric=alpha_metric+(atan2(temptheta2(numB),temptheta1(numB))-theta_av).^2;
-            end
-            trial_result(numStp)=alpha_metric;
+            [~,IN]=min(trial_result);
+            alpha=10*pi*IN*40*pi/TryTime;
         end
-        [~,IN]=min(trial_result);
-        alpha=10*pi*IN*40*pi/TryTime;
     end
     
 
