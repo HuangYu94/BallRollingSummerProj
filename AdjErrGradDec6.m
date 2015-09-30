@@ -69,7 +69,6 @@ while err_new>precision_control && k<=1000
         for n=1:numBall %calculate the current error
 %             zaxis=X(:,:,n)*[0;0;1];
             psi(n) = acos(X(3,:,n));
-            error_sep(n,k)=psi(n);
         end
         err_old=sqrt(sum(psi.^2)/numBall);
         Xturn=GDFindLengthX(X,rads,numBall);%find best length for X rotation
@@ -79,6 +78,7 @@ while err_new>precision_control && k<=1000
             X(:,:,n)=RotateX(Xturn/rads(n))*X(:,:,n);
 %             zaxis=X(:,:,n)*[0;0;1];
             psi(n)=acos(X(3,:,n));
+            error_sep(n,k)=psi(n);
         end
         err_new=sqrt(sum(psi.^2)/numBall);
         error_rec(k)=err_new;
@@ -92,6 +92,7 @@ while err_new>precision_control && k<=1000
             X(:,:,n)=RotateY(Yturn/rads(n))*X(:,:,n);
 %             zaxis=X(:,:,n)*[0;0;1];
             psi(n)=acos(X(3,:,n));
+            error_sep(n,k)=psi(n);
         end
         path(1,k+1)=Yturn+path(1,k);
         path(2,k+1)=path(2,k);
@@ -113,7 +114,7 @@ while err_new>precision_control && k<=1000
         legendinfo=cell(1,numBall);
         legendinfo{1}='error sum';
         for ii=1:numBall
-            plot(stp,180/pi*error_sep(ii,:),color_arr(ii));
+            plot(stp(1:k),180/pi*error_sep(ii,1:k),color_arr(ii));
             legendinfo{ii+1}=['rad:',num2str(rads(ii))];
         end
         legend(legendinfo);
@@ -389,14 +390,14 @@ toc
             alpha=60*pi;
         else
             configX=repmat([0,0;0,0,;0,0],[1,1,numBall]);
-            TryTime=10000;
+            TryTime=12000;
             trial_result=zeros(1,TryTime);
             %those two values are for storing the information for calculating
             %the Theta:
             temptheta1=zeros(1,numBall);
             temptheta2=zeros(1,numBall);
             for numStp=1:TryTime
-                tryAlpha=10*pi+numStp*40*pi/TryTime;
+                tryAlpha=10*pi+numStp*50*pi/TryTime;
                 for numLoop=1:numBall
                     configX(:,2,numLoop)=X(:,:,numLoop)*rads(numLoop);
                     rcBall=rc*rads(numLoop)/sqrt(rc.^2+rads(numLoop).^2);
