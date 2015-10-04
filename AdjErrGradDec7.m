@@ -139,10 +139,11 @@ while err_new>precision_control
     end
     RotPoint=[-rc*cos(OrientTheta),-rc*sin(OrientTheta),0];
 %     alpha=FindAlpha(RotPoint,X,rads,rc);
-    alpha=pi*40;   % we randomly set it to a big value to test our theory.
+    alpha=pi*60;   % we randomly set it to a big value to test our theory.
     %==============NOTICE===================%
     %The total time for runing this is "Elapsed time is 77967.015949
-    %seconds."
+    %seconds."  alpha=40*pi constant!
+    %alpha=50*pi constant: Elapsed time is 51231.675865 seconds.
     %==============NOTICE===================%
     BallConfig=repmat([0,0;0,0;0,0],[1,1,numBall]);
     for n=1:numBall
@@ -156,7 +157,7 @@ while err_new>precision_control
     ZrotRec(1,Zround)=path(1,k);
     ZrotRec(2,Zround)=path(2,k);
     ZrotRec(3,Zround)=alpha;
-
+save('GDmyData60pi.mat','error_rec','path','path1','ZrotRec','X');
 end
 %we need to get the error_rec rid of zero, in order to make a plot
 % we do the following steps:
@@ -167,7 +168,7 @@ title('Noiseless Ensemble Control of 4 Spheres Orientation');
 xlabel('steps');
 ylabel('overall error(degs)');
 path1=path(:,1:k);
-save('GDmyData1.mat','error_rec','path','path1','ZrotRec','X');
+save('GDmyData60pi.mat','error_rec','path','path1','ZrotRec','X');
 figure(2)
 plot(path1(1,:),path1(2,:), path1(1,1),path1(2,1),'go',path1(1,end),path1(2,end),'rx' );
 hold on
