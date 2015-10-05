@@ -144,6 +144,7 @@ while err_new>precision_control
     %The total time for runing this is "Elapsed time is 77967.015949
     %seconds."  alpha=40*pi constant!
     %alpha=50*pi constant: Elapsed time is 51231.675865 seconds.
+    %alpha=60*pi constant: Elapsed time is 36367.830932 seconds.
     %==============NOTICE===================%
     BallConfig=repmat([0,0;0,0;0,0],[1,1,numBall]);
     for n=1:numBall
