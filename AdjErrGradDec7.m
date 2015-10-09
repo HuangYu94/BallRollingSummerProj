@@ -131,7 +131,7 @@ while err_new>precision_control
     end
     OrientTheta=atan2(SumTheta2,SumTheta1);
     PsiAv=sum(psi)/numBall;  %calculate the average psi error
-    rctemp=RadAv*tan(PsiAv/2);
+    rctemp=RadAv*sin(PsiAv);
     if rctemp>20   %practical restriction
         rc=20;
     else
